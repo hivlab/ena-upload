@@ -1,0 +1,11 @@
+name: ena_upload
+channels:
+  - r
+  - conda-forge
+  - bioconda
+dependencies:
+  - ena-upload-cli
+  - r-tidyverse
+  - r-lubridate
+  - r-writexl
+  - r-glue
