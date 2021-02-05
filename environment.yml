@@ -5,6 +5,8 @@ channels:
   - bioconda
 dependencies:
   - ena-upload-cli
+  - openpyxl
+  - xlrd
   - r-tidyverse
   - r-lubridate
   - r-writexl
