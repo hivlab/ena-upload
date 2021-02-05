@@ -387,4 +387,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(**args)
+    main(
+        xlsx_path=args.xlsx_path,
+        out_path=args.out_path,
+        action=args.action,
+        viral_submission=args.viral_submission,
+    )
