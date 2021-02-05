@@ -1,9 +1,13 @@
+#!/usr/bin/env Rscript
+args <- commandArgs(trailingOnly=TRUE)
+
 library(tidyverse)
 library(lubridate)
 library(glue)
 library(writexl)
 
-batches <- read_lines("data/batches.txt") %>% 
+samples <- read_csv(args[1], col_types = list(collection_date = col_character()))
+batches <- read_lines(args[2]) %>% 
   str_split("/") %>% 
   map(~.x[6:7]) %>% 
   do.call(rbind, .) %>% 
@@ -13,10 +17,9 @@ batches <- read_lines("data/batches.txt") %>%
     alias = str_extract(file_name, "^[A-Za-z0-9-]+"),
     alias = str_replace(alias, "-[^V]+", "")
   )
-samples <- read_csv("results/samples_2021-02-03.csv", col_types = list(collection_date = col_character()))
+
 sample_metadata <- samples %>% 
   left_join(batches)
-
 
 standard_sheet <- function(vars, comments) {
   names(comments) <- vars
@@ -48,6 +51,7 @@ ena_study <- tibble(
   study_type,
   study_abstract
 )
+
 ena_study <- bind_rows(
   study_head,
   ena_study
@@ -137,7 +141,7 @@ experiment_head <- standard_sheet(ena_experiment_cols, ena_experiment_comments)
 ena_experiment <- sample_metadata %>% 
   select(sample_alias = alias, library_name) %>% 
   mutate(alias = glue("{library_name}_{sample_alias}"))
-ena_experiment$study_alias <- ena_study$alias
+ena_experiment$study_alias <- study_alias
 ena_experiment$title <- "Illumina MiSeq sequencing of amplicons"
 ena_experiment$design_description <- "Tiling amplicon PCR with primers from doi: 10.1093/ve/veaa027"
 ena_experiment$library_strategy <- "AMPLICON"
