@@ -18,8 +18,14 @@ batches <- read_lines(args[2]) %>%
     alias = str_replace(alias, "-[^V]+", "")
   )
 
+batches$path <- read_lines(args[2])
+
 sample_metadata <- samples %>% 
   left_join(batches)
+
+sample_metadata$path %>% 
+  paste(collapse = " ") %>% 
+  write_lines("results/data.txt")
 
 standard_sheet <- function(vars, comments) {
   names(comments) <- vars
@@ -43,8 +49,8 @@ study_head <- standard_sheet(ena_study_cols, ena_study_comments)
 
 study_alias <- "KoroGeno-EST"
 study_title <- "Whole-genome sequencing of SARS-CoV-2 from Covid-19 patients from Estonia"
-study_type <- "Whole-genome sequencing"
-study_abstract <- "Whole-genome sequences of SARS-CoV-2 from naso-/oropharyngeal swabs obtained from Estonian Covid-19 patients."
+study_type <- "Whole Genome Sequencing"
+study_abstract <- "Whole genome sequences of SARS-CoV-2 from naso-/oropharyngeal swabs obtained from Estonian Covid-19 patients."
 ena_study <- tibble(
   alias = study_alias,
   title = study_title,
