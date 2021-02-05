@@ -28,7 +28,7 @@ def read_ena_xlsx_sheet(xlsx_path, sheet_name):
     return df
 
 
-def extract_data(xl_sheet, expected_columns):
+def extract_data(xl_sheet, expected_columns, unique_key = "alias"):
     if any(xl_sheet.columns.value_counts() > 1):
         sys.exit("Duplicated columns")
     for col in range(len(expected_columns)):
@@ -36,9 +36,9 @@ def extract_data(xl_sheet, expected_columns):
             expected_columns[col] in xl_sheet.columns
         ), f"Expected column {expected_columns[col]} not found"
     assert not any(
-        xl_sheet.duplicated(subset=["alias"])
-    ), "'alias' identificators not unique"
-    xl_sheet = xl_sheet.set_index("alias")
+        xl_sheet.duplicated(subset=[unique_key])
+    ), f"{unique_key} identificators not unique"
+    xl_sheet = xl_sheet.set_index(unique_key)
     return xl_sheet.to_dict("index")
 
 
@@ -119,7 +119,7 @@ def main(xlsx_path, out_path, action, viral_submission=False):
         raise ValueError("No entries found in runs sheet")
     run_cols = ["alias", "experiment_alias", "file_name", "file_format"]
     try:
-        runs_dict = extract_data(xl_sheet, run_cols)
+        runs_dict = extract_data(xl_sheet, run_cols, unique_key="file_name")
     except AssertionError as e:
         print("Sheet ENA_run: ", e)
         raise
@@ -353,16 +353,16 @@ def main(xlsx_path, out_path, action, viral_submission=False):
                     )
                     + "\n"
                 )
-                for run_alias, run in runs_dict.items():
+                for file_name, run in runs_dict.items():
                     if run["experiment_alias"] == exp_alias:
                         runs_table.write(
                             "\t".join(
                                 [
-                                    run_alias,
+                                    run["alias"],
                                     action,
                                     "ena_run_accession",
                                     exp_alias,
-                                    run["file_name"],
+                                    file_name,
                                     FILE_FORMAT,
                                     "file_checksum",
                                     "submission_date_ENA",
