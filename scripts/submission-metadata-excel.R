@@ -181,7 +181,7 @@ ena_run_comments <- c(
 run_head <- standard_sheet(ena_run_cols, ena_run_comments)
 ena_run <- sample_metadata %>% 
   select(file_name, library_name, sample_alias = alias) %>% 
-  mutate(alias = str_remove(file_name, "\\.fastq.*"), 
+  mutate(alias = str_remove(file_name, "_R.*"), 
          experiment_alias = glue("{library_name}_{sample_alias}"),
          file_format = "FASTQ") %>% 
   select(alias, experiment_alias, file_name, file_format)
