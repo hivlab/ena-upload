@@ -48,7 +48,7 @@ ena_study_comments <- c(
 study_head <- standard_sheet(ena_study_cols, ena_study_comments)
 
 study_alias <- "KoroGeno-EST"
-study_title <- "Whole-genome sequencing of SARS-CoV-2 from Covid-19 patients from Estonia"
+study_title <- "Whole genome sequencing of SARS-CoV-2 from Covid-19 patients from Estonia"
 study_type <- "Whole Genome Sequencing"
 study_abstract <- "Whole genome sequences of SARS-CoV-2 from naso-/oropharyngeal swabs obtained from Estonian Covid-19 patients."
 ena_study <- tibble(
