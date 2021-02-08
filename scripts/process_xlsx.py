@@ -328,7 +328,13 @@ def main(xlsx_path, out_path, action, viral_submission=False):
             # (not listed in the samples or study dict)
             # process the experiments for this sample
             if exp["sample_alias"] == sample_alias:
-                lib_alias = "library_" + exp_alias + "_" + exp["sample_alias"]
+                if pd.isnull(exp["library_name"]):
+                    if exp["sample_alias"] in exp_alias:
+                        lib_alias = exp_alias
+                    else: 
+                        lib_alias = exp_alias + "_" + exp["sample_alias"]                 
+                else:
+                    lib_alias = exp["library_name"]
                 experiments_table.write(
                     "\t".join(
                         [
