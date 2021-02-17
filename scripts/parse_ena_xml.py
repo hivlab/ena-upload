@@ -58,3 +58,4 @@ for s, m in manifest.items():
     with open(f"output/{s}_manifest.txt", "w") as h:
         for k, v in m.items():
             h.write(f"{k}   {v}\n")
+ 

@@ -28,7 +28,7 @@ def read_ena_xlsx_sheet(xlsx_path, sheet_name):
     return df
 
 
-def extract_data(xl_sheet, expected_columns, unique_key = "alias"):
+def extract_data(xl_sheet, expected_columns, unique_key="alias"):
     if any(xl_sheet.columns.value_counts() > 1):
         sys.exit("Duplicated columns")
     for col in range(len(expected_columns)):
@@ -331,8 +331,8 @@ def main(xlsx_path, out_path, action, viral_submission=False):
                 if pd.isnull(exp["library_name"]):
                     if exp["sample_alias"] in exp_alias:
                         lib_alias = exp_alias
-                    else: 
-                        lib_alias = exp_alias + "_" + exp["sample_alias"]                 
+                    else:
+                        lib_alias = exp_alias + "_" + exp["sample_alias"]
                 else:
                     lib_alias = exp["library_name"]
                 experiments_table.write(
