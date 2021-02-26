@@ -11,3 +11,5 @@ dependencies:
   - r-lubridate
   - r-writexl
   - r-glue
+  - r-r.utils
+  - snakemake
