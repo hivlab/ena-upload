@@ -10,7 +10,7 @@ args <- cmdArgs()
 samples <- read_csv(args$s, col_types = list(collection_date = col_character()))
 batches <- read_lines(args$b) %>% 
   str_split("/") %>% 
-  map(~.x[6:7]) %>% 
+  map(tail, 2) %>% 
   do.call(rbind, .) %>% 
   as_tibble(.name_repair = "minimal") %>% 
   set_names(c("batch", "file_name")) %>% 
