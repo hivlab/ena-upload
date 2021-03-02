@@ -6,6 +6,8 @@ import re
 
 # Upload config.
 configfile: "config/config.yaml"
+
+
 pepfile: "config/pep.yaml"
 
 
@@ -49,7 +51,7 @@ rule form:
         "logs/form.log",
     shell:
         """
-        (Rscript ../workflow/scripts/submission-metadata-excel.R -p {input.pep} -c {input.config} -t {FILE_NAME_TEMPLATE} -x {output.xlsx}) 2> {log}
+        (Rscript scripts/submission-metadata-excel.R -p {input.pep} -c {input.config} -t {FILE_NAME_TEMPLATE} -x {output.xlsx}) 2> {log}
         """
 
 
@@ -68,7 +70,7 @@ rule parse_form:
         extra="--action add --vir",
     shell:
         """
-        (python ../workflow/scripts/process_xlsx.py --form {input[0]} --out_dir results {params.extra}) 2> {log}
+        (python scripts/process_xlsx.py --form {input[0]} --out_dir results {params.extra}) 2> {log}
         """
 
 

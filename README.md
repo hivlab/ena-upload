@@ -13,7 +13,7 @@ cd ena-upload
 conda env create -f workflow/envs/environment.yml
 ```
 
-- Install R **pepr**
+- Install R **pepr** separately, as *r-pepr* is not available on anaconda.org.
 
 ```bash
 conda activate ena_upload
@@ -33,6 +33,20 @@ Update files in `config` directory:
 - `config.yaml` study wide configuration.
 
 - Check upload rule flags in `Snakefile`, by default, TEST submission with 'add' action is performed.
+
+- Create `.secret.yml` file with [Webin](https://www.ebi.ac.uk/ena/submit/sra/#home) credentials.
+
+- Test run:
+
+```bash
+snakemake -n --use-conda
+```
+
+- Run:
+
+```bash
+snakemake -j --use-conda
+```
 
 - Hold your breath.
 
