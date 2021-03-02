@@ -8,7 +8,6 @@ library(R.utils)
 library(pepr)
 args <- cmdArgs()
 
-
 p <- Project(file = args$p)
 sample_table <- sampleTable(p)
 sample_metadata <- sample_table %>% 
@@ -19,6 +18,7 @@ sample_metadata <- sample_table %>%
 
 
 conf <- read_yaml(args$c)
+file_name_template <- args$t
 
 standard_sheet <- function(vars, comments) {
   names(comments) <- vars
@@ -146,11 +146,12 @@ ena_run_comments <- c(
 )
 run_head <- standard_sheet(ena_run_cols, ena_run_comments)
 ena_run <- sample_metadata %>% 
-  select(file_name = file, experiment, sample_alias = alias) %>% 
-  mutate(alias = str_remove(file_name, "_R.*"), 
+  select(run, file, experiment, sample_alias = alias) %>% 
+  mutate(pair = str_extract(file, "(?<=R)[1,2]"),
+         file_name = basename(glue("results/data/{run}_R{pair}_clean.fastq.gz")), 
          experiment_alias = glue("{experiment}_{sample_alias}"),
          file_format = "FASTQ") %>% 
-  select(alias, experiment_alias, file_name, file_format)
+  select(alias = run, experiment_alias, file_name, file_format)
 ena_run <- bind_rows(
   run_head,
   ena_run

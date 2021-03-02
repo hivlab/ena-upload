@@ -20,6 +20,7 @@ HOST_GENOME = os.environ["HOST_GENOME"]
 RUNS = list(set(pep.subsample_table["run"]))
 FILES = []
 [FILES.extend(e) for e in pep.sample_table["path"]]
+FILE_NAME_TEMPLATE = "results/data/{run}_R{pair}_clean.fastq.gz"
 
 
 # Function to match read pair to run.
@@ -48,7 +49,7 @@ rule form:
         "logs/form.log",
     shell:
         """
-        (Rscript ../workflow/scripts/submission-metadata-excel.R -p {input.pep} -c {input.config} -x {output.xlsx}) 2> {log}
+        (Rscript ../workflow/scripts/submission-metadata-excel.R -p {input.pep} -c {input.config} -t {FILE_NAME_TEMPLATE} -x {output.xlsx}) 2> {log}
         """
 
 
@@ -133,8 +134,7 @@ rule reformat:
 # Upload new study or samples to ENA. When adding new samples to study, omit study table.
 rule upload:
     input:
-        expand("results/data/{run}_R{pair}_clean.fastq.gz", run=RUNS, pair=[1, 2]),
-        study=rules.parse_form.output.study,
+        expand(FILE_NAME_TEMPLATE, run=RUNS, pair=[1, 2]),
         sample=rules.parse_form.output.sample,
         experiment=rules.parse_form.output.experiment,
         run=rules.parse_form.output.run,
