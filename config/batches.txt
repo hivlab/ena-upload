@@ -1,0 +1,2 @@
+/path/to/covid/200416/Cov7755_S9_L001_R1_001.fastq.gz
+/path/to/covid/200416/Cov7755_S9_L001_R2_001.fastq.gz
