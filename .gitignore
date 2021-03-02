@@ -7,3 +7,7 @@ output
 data
 logs
 .tests
+.secret.yml
+reads
+.vscode
+*sh
