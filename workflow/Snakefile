@@ -6,6 +6,7 @@ import re
 
 # Upload config.
 configfile: "config/config.yaml"
+pepfile: "config/pep.yaml"
 
 
 # Path to snakemake wrappers repository.
@@ -14,18 +15,16 @@ WRAPPER_PREFIX = "https://raw.githubusercontent.com/avilab/virome-wrappers"
 # Path to indexed host genome. Set HOST_GENOME environment variable or use path directly.
 HOST_GENOME = os.environ["HOST_GENOME"]
 
-# Text file with full paths to raw reads, one per line. Specify path in config/config.yaml.
-with open(config["batches"], "r") as h:
-    batches = h.read().splitlines()
 
-# Parse run names. Adjust regex '_R[1,2]_001.fastq.gz' to match your file pattern if required.
-RUNS = list(
-    set([re.sub("_R[1,2]_001.fastq.gz", "", e.split("/")[-1:][0]) for e in batches])
-)
+# Parse run names.
+RUNS = list(set(pep.subsample_table["run"]))
+FILES = []
+[FILES.extend(e) for e in pep.sample_table["path"]]
+
 
 # Function to match read pair to run.
 def get_reads(wildcards):
-    pair = [e for e in batches if wildcards.run in e]
+    pair = [e for e in FILES if wildcards.run in e]
     input = {}
     for e in pair:
         input.update({"in1": e} if re.search("_R1", e) else {"in2": e})
@@ -41,17 +40,15 @@ rule all:
 # Generate study and sample metadata excel spreadsheet.
 rule form:
     input:
-        samples="config/sample_metadata.csv",
-        batches="config/batches.txt",
+        pep="config/pep.yaml",
         config="config/config.yaml",
     output:
         xlsx="results/ena_submission.xlsx",
-        data="results/data.txt",
     log:
         "logs/form.log",
     shell:
         """
-        (Rscript scripts/submission-metadata-excel.R -s {input.samples} -b {input.batches} -c {input.config} -x {output.xlsx} -d {output.data}) 2> {log}
+        (Rscript ../workflow/scripts/submission-metadata-excel.R -p {input.pep} -c {input.config} -x {output.xlsx}) 2> {log}
         """
 
 
@@ -70,7 +67,7 @@ rule parse_form:
         extra="--action add --vir",
     shell:
         """
-        (python scripts/process_xlsx.py --form {input[0]} --out_dir results {params.extra}) 2> {log}
+        (python ../workflow/scripts/process_xlsx.py --form {input[0]} --out_dir results {params.extra}) 2> {log}
         """
 
 
@@ -141,7 +138,6 @@ rule upload:
         sample=rules.parse_form.output.sample,
         experiment=rules.parse_form.output.experiment,
         run=rules.parse_form.output.run,
-        data=rules.form.output.data,
     output:
         "results/upload.done",
     log:
@@ -165,5 +161,5 @@ rule upload:
         --center {params.center} \
         --secret {params.secret} \
         {params.extra} \
-        && touch {output[0]}) > {log}       
+        && touch {output[0]}) 2> {log}       
         """

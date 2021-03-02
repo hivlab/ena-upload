@@ -5,30 +5,20 @@ library(glue)
 library(writexl)
 library(yaml)
 library(R.utils)
+library(pepr)
 args <- cmdArgs()
 
-samples <- read_csv(args$s, col_types = list(collection_date = col_character()))
-batches <- read_lines(args$b) %>% 
-  str_split("/") %>% 
-  map(tail, 2) %>% 
-  do.call(rbind, .) %>% 
-  as_tibble(.name_repair = "minimal") %>% 
-  set_names(c("batch", "file_name")) %>% 
-  mutate(
-    alias = str_extract(file_name, "^[A-Za-z0-9-]+"),
-    alias = str_replace(alias, "-[^V]+", "")
-  )
 
-batches$path <- read_lines(args$b)
+p <- Project(file = args$p)
+sample_table <- sampleTable(p)
+sample_metadata <- sample_table %>% 
+  as_tibble() %>% 
+  unnest(cols = c(sample_name, collection_date, experiment, path, run, file)) %>% 
+  rename(alias = sample_name) %>%
+  mutate(collection_date = as.character(collection_date))
+
+
 conf <- read_yaml(args$c)
-
-sample_metadata <- samples %>% 
-  rename(alias = sample) %>% 
-  left_join(batches)
-
-sample_metadata$path %>% 
-  paste(collapse = " ") %>% 
-  write_lines(args$d)
 
 standard_sheet <- function(vars, comments) {
   names(comments) <- vars
@@ -128,13 +118,13 @@ ena_experiment_comments <- c(
   "Model of the sequencing instrument.")
 experiment_head <- standard_sheet(ena_experiment_cols, ena_experiment_comments)
 ena_experiment <- sample_metadata %>% 
-  select(sample_alias = alias, batch) %>% 
-  mutate(alias = glue("{batch}_{sample_alias}"))
+  select(sample_alias = alias, experiment) %>% 
+  mutate(alias = glue("{experiment}_{sample_alias}"))
 ena_experiment$study_alias <- conf$ena_study$alias
 ena_experiment <- ena_experiment %>% 
   bind_cols(as_tibble(conf$ena_experiment))
 ena_experiment <- ena_experiment %>% 
-    select(-batch) %>%
+    select(-experiment) %>%
   select(alias,	title,	study_alias, sample_alias, design_description, everything())
 ena_experiment <- bind_rows(
   experiment_head,
@@ -156,9 +146,9 @@ ena_run_comments <- c(
 )
 run_head <- standard_sheet(ena_run_cols, ena_run_comments)
 ena_run <- sample_metadata %>% 
-  select(file_name, batch, sample_alias = alias) %>% 
+  select(file_name = file, experiment, sample_alias = alias) %>% 
   mutate(alias = str_remove(file_name, "_R.*"), 
-         experiment_alias = glue("{batch}_{sample_alias}"),
+         experiment_alias = glue("{experiment}_{sample_alias}"),
          file_format = "FASTQ") %>% 
   select(alias, experiment_alias, file_name, file_format)
 ena_run <- bind_rows(

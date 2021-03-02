@@ -1,15 +1,20 @@
 name: ena_upload
 channels:
-  - r
   - conda-forge
+  - r
   - bioconda
 dependencies:
   - ena-upload-cli
   - openpyxl
   - xlrd
+  - r-base >=4.0
   - r-tidyverse
   - r-lubridate
   - r-writexl
   - r-glue
   - r-r.utils
+  - r-remotes
+  - r-pryr
+  - r-data.table
   - snakemake
+  - peppy
