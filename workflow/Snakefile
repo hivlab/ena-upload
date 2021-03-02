@@ -19,9 +19,8 @@ HOST_GENOME = os.environ["HOST_GENOME"]
 
 
 # Parse run names.
-RUNS = list(set(pep.subsample_table["run"]))
-FILES = []
-[FILES.extend(e) for e in pep.sample_table["path"]]
+RUNS = list(set(pep.sample_table["run"]))
+FILES = pep.sample_table["path"].to_list()
 FILE_NAME_TEMPLATE = "results/data/{run}_R{pair}_clean.fastq.gz"
 
 
