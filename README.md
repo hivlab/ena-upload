@@ -17,7 +17,7 @@ conda env create -f workflow/envs/environment.yml
 
 ```bash
 conda activate ena_upload
-Rscript -e 'Sys.unsetenv("GITHUB_PAT");remotes::install_github("pepkit/pepr", dependencies = FALSE)'
+Rscript -e "install.packages('pepr', repos='https://cloud.r-project.org/')"
 ```
 
 ## Running
