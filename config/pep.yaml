@@ -7,4 +7,4 @@ sample_modifiers:
   derive:
     attributes: [path]
     sources:
-      source1: "/Users/taavi/Projects/sarscov2-upload/.tests/reads/projects/covid/{experiment}/{file}"
+      source1: "covid/{experiment}/{file}"
