@@ -340,7 +340,7 @@ def main(xlsx_path, out_path, action, viral_submission=False):
                         [
                             exp_alias,
                             action,
-                            "accession_ena",
+                            "ena_accession",
                             exp["title"],
                             exp["study_alias"],
                             sample_alias,

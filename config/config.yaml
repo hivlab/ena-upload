@@ -1,0 +1,31 @@
+center: "Institute of Biomedicine and Translational Medicine, University of Tartu"
+
+ena_study:
+  alias: "KoroGeno-EST"
+  title: "Whole genome sequencing of SARS-CoV-2 from Covid-19 patients from Estonia"
+  study_type: "Whole Genome Sequencing"
+  study_abstract: "Whole genome sequences of SARS-CoV-2 from naso-/oropharyngeal swabs obtained from Estonian Covid-19 patients."
+
+ena_sample:
+  title: "PCR tiled amplicon WGS of SARS-CoV-2"
+  scientific_name: "Severe acute respiratory syndrome coronavirus 2"
+  sample_description: "Nasopharyngeal/oropharyngeal swab from Estonian Covid-19 patient."
+  geographic location (country and/or sea): "Estonia"
+  host common name: "human"
+  host health state: "not provided" # "not applicable,diseased,healthy,not provided,not collected,restricted access"
+  host sex: "not provided" # "not applicable,diseased,healthy,not provided,not collected,restricted access"
+  host scientific name: "Homo sapiens"
+  collector name: "unknown"
+  collecting institution: "unknown"
+
+ena_experiment:
+  title: "Illumina MiSeq sequencing of amplicons"
+  design_description: "Tiling amplicon PCR with primers from doi: 10.1093/ve/veaa027"
+  library_strategy: "AMPLICON"
+  library_source: "VIRAL RNA"	
+  library_selection: "RT-PCR"
+  library_layout: "PAIRED"
+  insert_size: "250"
+  library_construction_protocol: "Illumina Nextera XT"
+  platform: "ILLUMINA"
+  instrument_model: "Illumina MiSeq"

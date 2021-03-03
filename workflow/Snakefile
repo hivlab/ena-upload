@@ -1,0 +1,172 @@
+import pandas as pd
+from snakemake.utils import validate
+import os
+import re
+
+
+# Upload config.
+configfile: "config/config.yaml"
+
+
+pepfile: "config/pep.yaml"
+
+
+# Path to snakemake wrappers repository.
+WRAPPER_PREFIX = "https://raw.githubusercontent.com/avilab/virome-wrappers"
+
+# Path to indexed host genome. Set HOST_GENOME environment variable or use path directly.
+HOST_GENOME = os.environ["HOST_GENOME"]
+
+
+# Parse run names.
+RUNS = list(set(pep.sample_table["run"]))
+FILES = pep.sample_table["path"].to_list()
+FILE_NAME_TEMPLATE = "results/data/{run}_R{pair}_clean.fastq.gz"
+
+
+# Function to match read pair to run.
+def get_reads(wildcards):
+    pair = [e for e in FILES if wildcards.run in e]
+    input = {}
+    for e in pair:
+        input.update({"in1": e} if re.search("_R1", e) else {"in2": e})
+    return input
+
+
+# Workflow target.
+rule all:
+    input:
+        "results/upload.done",
+
+
+# Generate study and sample metadata excel spreadsheet.
+rule form:
+    input:
+        pep="config/pep.yaml",
+        config="config/config.yaml",
+    output:
+        xlsx="results/ena_submission.xlsx",
+    log:
+        "logs/form.log",
+    resources:
+        runtime=120,
+        mem_mb=4000,
+    shell:
+        """
+        (Rscript workflow/scripts/submission-metadata-excel.R -p {input.pep} -c {input.config} -t {FILE_NAME_TEMPLATE} -x {output.xlsx}) 2> {log}
+        """
+
+
+# Generate metadata files from excel spreadsheets.
+rule parse_form:
+    input:
+        rules.form.output.xlsx,
+    output:
+        study="results/studies.tsv",
+        sample="results/samples.tsv",
+        experiment="results/experiments.tsv",
+        run="results/runs.tsv",
+    log:
+        "logs/parse_form.log",
+    params:
+        extra="--action add --vir",
+    resources:
+        runtime=120,
+        mem_mb=4000,
+    shell:
+        """
+        (python workflow/scripts/process_xlsx.py --form {input[0]} --out_dir results {params.extra}) 2> {log}
+        """
+
+
+# Quality trimming.
+rule trim:
+    input:
+        unpack(get_reads),
+    output:
+        out1=temp("results/data/{run}_R1_trimmed.fastq.gz"),
+        out2=temp("results/data/{run}_R2_trimmed.fastq.gz"),
+    log:
+        "logs/{run}_trim.log",
+    params:
+        extra=(
+            "ref=adapters ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=r trimq=10 ordered"
+        ),
+    resources:
+        runtime=lambda wildcards, attempt: 180 + (attempt * 60),
+        mem_mb=16000,
+    wrapper:
+        f"{WRAPPER_PREFIX}/v0.6/bbtools/bbduk"
+
+
+# Remove host sequences.
+rule maphost:
+    input:
+        in1=rules.trim.output.out1,
+        in2=rules.trim.output.out2,
+        ref=HOST_GENOME,
+    output:
+        outu=temp("results/data/{run}_interleaved_clean.fastq.gz"),
+        statsfile="results/data/{run}_maphost.txt",
+    log:
+        "logs/{run}_maphost.log",
+    params:
+        extra="minid=0.95 maxindel=3 bwr=0.16 bw=12 quickmatch fast minhits=2 qtrim=rl trimq=10 untrim",
+    resources:
+        runtime=lambda wildcards, attempt: attempt * 360,
+        mem_mb=40000,
+    threads: 4
+    wrapper:
+        f"{WRAPPER_PREFIX}/v0.6/bbtools/bbwrap"
+
+
+# Convert PE interleaved reads to pair.
+rule reformat:
+    input:
+        rules.maphost.output.outu,
+    output:
+        out="results/data/{run}_R1_clean.fastq.gz",
+        out2="results/data/{run}_R2_clean.fastq.gz",
+    log:
+        "logs/{run}_reformat.log",
+    params:
+        extra="",
+    resources:
+        runtime=360,
+        mem_mb=4000,
+    wrapper:
+        f"{WRAPPER_PREFIX}/v0.6/bbtools/reformat"
+
+
+# Upload new study or samples to ENA. When adding new samples to study, omit study table.
+rule upload:
+    input:
+        expand(FILE_NAME_TEMPLATE, run=RUNS, pair=[1, 2]),
+        sample=rules.parse_form.output.sample,
+        experiment=rules.parse_form.output.experiment,
+        run=rules.parse_form.output.run,
+    output:
+        "results/upload.done",
+    log:
+        "logs/upload.log",
+    params:
+        action="add",
+        data="results/data/*_R*_clean.fastq.gz",
+        center=config["center"],
+        secret=".secret.yml",
+        extra="--vir",
+    resources:
+        runtime=1440,
+        mem_mb=8000,
+    shell:
+        """
+        ($CONDA_PREFIX/bin/ena-upload-cli --action {params.action} \
+        --sample {input.sample} \
+        --experiment {input.experiment} \
+        --run {input.run} \
+        --data {params.data} \
+        --center {params.center} \
+        --secret {params.secret} \
+        {params.extra} \
+        && touch {output[0]}) 2> {log}       
+        """

@@ -1,5 +1,14 @@
 .secret.yml
 .Rproj.user
+.Rhistory
+*Rproj
+.snakemake
 output
 data
-results
+logs
+.tests
+.secret.yml
+reads
+.vscode
+*sh
+slurm*

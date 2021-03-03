@@ -1,31 +1,24 @@
 #!/usr/bin/env Rscript
-args <- commandArgs(trailingOnly=TRUE)
-
 library(tidyverse)
 library(lubridate)
 library(glue)
 library(writexl)
+library(yaml)
+library(R.utils)
+library(pepr)
+args <- cmdArgs()
 
-samples <- read_csv(args[1], col_types = list(collection_date = col_character()))
-batches <- read_lines(args[2]) %>% 
-  str_split("/") %>% 
-  map(~.x[6:7]) %>% 
-  do.call(rbind, .) %>% 
-  as_tibble(.name_repair = "minimal") %>% 
-  set_names(c("batch", "file_name")) %>% 
-  mutate(
-    alias = str_extract(file_name, "^[A-Za-z0-9-]+"),
-    alias = str_replace(alias, "-[^V]+", "")
-  )
+p <- Project(file = args$p)
+sample_table <- sampleTable(p)
+sample_metadata <- sample_table %>% 
+  as_tibble() %>% 
+  unnest(cols = c(sample_name, collection_date, experiment, path, run, file)) %>% 
+  rename(alias = sample_name) %>%
+  mutate(collection_date = as.character(collection_date))
 
-batches$path <- read_lines(args[2])
 
-sample_metadata <- samples %>% 
-  left_join(batches)
-
-sample_metadata$path %>% 
-  paste(collapse = " ") %>% 
-  write_lines("results/data.txt")
+conf <- read_yaml(args$c)
+file_name_template <- args$t
 
 standard_sheet <- function(vars, comments) {
   names(comments) <- vars
@@ -46,18 +39,7 @@ ena_study_comments <- c(
   "Briefly describes the goals, purpose, and scope of the Study.  This need not be listed if it can be inherited from a referenced publication."
 )
 study_head <- standard_sheet(ena_study_cols, ena_study_comments)
-
-study_alias <- "KoroGeno-EST"
-study_title <- "Whole genome sequencing of SARS-CoV-2 from Covid-19 patients from Estonia"
-study_type <- "Whole Genome Sequencing"
-study_abstract <- "Whole genome sequences of SARS-CoV-2 from naso-/oropharyngeal swabs obtained from Estonian Covid-19 patients."
-ena_study <- tibble(
-  alias = study_alias,
-  title = study_title,
-  study_type,
-  study_abstract
-)
-
+ena_study <- as_tibble(conf$ena_study)
 ena_study <- bind_rows(
   study_head,
   ena_study
@@ -94,19 +76,10 @@ ena_sample_comments <- c(
   "individual isolate from which the sample was obtained")
 sample_head <- standard_sheet(ena_sample_cols, ena_sample_comments)
 ena_sample <- sample_metadata %>% 
-  select(alias, `collection date` = collection_date)
-ena_sample$title <- "PCR tiled amplicon WGS of SARS-CoV-2"
-ena_sample$scientific_name	<- "Severe acute respiratory syndrome coronavirus 2"
-ena_sample$sample_description	<- "Nasopharyngeal/oropharyngeal swab from Estonian Covid-19 patient."
-ena_sample$`geographic location (country and/or sea)` <- "Estonia"
-ena_sample$`host common name` <- "human"
-ena_sample$`host health state`	<- "not provided" # "not applicable,diseased,healthy,not provided,not collected,restricted access"
-ena_sample$`host sex` <- "not provided" # "not applicable,diseased,healthy,not provided,not collected,restricted access"
-ena_sample$`host scientific name` <- "Homo sapiens"
-ena_sample$`collector name` <- "unknown"
-ena_sample$`collecting institution` <- "unknown"
+  select(alias, `collection date` = collection_date) %>% 
+  bind_cols(as_tibble(conf$ena_sample))
 ena_sample <- ena_sample %>% 
-  mutate(isolate = glue("SARS-CoV-2/human/{`geographic location (country and/or sea)`}/{alias}/{year(`collection date`)}"))
+  mutate(isolate = glue("SARS-CoV-2/human/{`geographic location (country and/or sea)`}/{alias}/{str_sub(`collection date`, 0, 4)}"))
 ena_sample <- bind_rows(
   sample_head,
   ena_sample
@@ -145,21 +118,13 @@ ena_experiment_comments <- c(
   "Model of the sequencing instrument.")
 experiment_head <- standard_sheet(ena_experiment_cols, ena_experiment_comments)
 ena_experiment <- sample_metadata %>% 
-  select(sample_alias = alias, batch) %>% 
-  mutate(alias = glue("{batch}_{sample_alias}"))
-ena_experiment$study_alias <- study_alias
-ena_experiment$title <- "Illumina MiSeq sequencing of amplicons"
-ena_experiment$design_description <- "Tiling amplicon PCR with primers from doi: 10.1093/ve/veaa027"
-ena_experiment$library_strategy <- "AMPLICON"
-ena_experiment$library_source <- "VIRAL RNA"	
-ena_experiment$library_selection <- "RT-PCR"
-ena_experiment$library_layout <- "PAIRED"
-ena_experiment$insert_size	<- "250"
-ena_experiment$library_construction_protocol <- "Illumina Nextera XT"
-ena_experiment$platform <- "ILLUMINA"
-ena_experiment$instrument_model <- "Illumina MiSeq"
+  select(sample_alias = alias, experiment) %>% 
+  mutate(alias = glue("{experiment}_{sample_alias}"))
+ena_experiment$study_alias <- conf$ena_study$alias
 ena_experiment <- ena_experiment %>% 
-    select(-batch) %>%
+  bind_cols(as_tibble(conf$ena_experiment))
+ena_experiment <- ena_experiment %>% 
+    select(-experiment) %>%
   select(alias,	title,	study_alias, sample_alias, design_description, everything())
 ena_experiment <- bind_rows(
   experiment_head,
@@ -181,11 +146,12 @@ ena_run_comments <- c(
 )
 run_head <- standard_sheet(ena_run_cols, ena_run_comments)
 ena_run <- sample_metadata %>% 
-  select(file_name, batch, sample_alias = alias) %>% 
-  mutate(alias = str_remove(file_name, "_R.*"), 
-         experiment_alias = glue("{batch}_{sample_alias}"),
+  select(run, file, experiment, sample_alias = alias) %>% 
+  mutate(pair = str_extract(file, "(?<=R)[1,2]"),
+         file_name = basename(glue("results/data/{run}_R{pair}_clean.fastq.gz")), 
+         experiment_alias = glue("{experiment}_{sample_alias}"),
          file_format = "FASTQ") %>% 
-  select(alias, experiment_alias, file_name, file_format)
+  select(alias = run, experiment_alias, file_name, file_format)
 ena_run <- bind_rows(
   run_head,
   ena_run
@@ -199,4 +165,4 @@ metadata <- list(
 ) %>% 
   map(distinct)
 
-write_xlsx(metadata, glue("results/samples_{Sys.Date()}_metadata.xlsx"))
+write_xlsx(metadata, args$x)
