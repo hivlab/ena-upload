@@ -11,3 +11,4 @@ logs
 reads
 .vscode
 *sh
+slurm*
