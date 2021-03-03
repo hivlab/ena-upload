@@ -24,15 +24,13 @@ Rscript -e "install.packages('pepr', repos='https://cloud.r-project.org/')"
 
 Update files in `config` directory:
 
-- `metadata.csv` sample metadata (sample_name, collection_date, experiment id)
-
-- `runs.csv` sample_name mapped to run name(s) and to file names of raw reads.
+- `metadata.csv` sample metadata (sample_name, collection_date, experiment id, runs/raw read file names)
 
 - `pep.yaml` **peppy** configuration file to provide full paths to raw reads.
 
 - `config.yaml` study wide configuration.
 
-- Check upload rule flags in `Snakefile`, by default, TEST submission with 'add' action is performed.
+- Check upload rule flags in `Snakefile`, by default, TEST submission (--dev flag in extra parameter) with 'add' action is performed.
 
 - Create `.secret.yml` file with [Webin](https://www.ebi.ac.uk/ena/submit/sra/#home) credentials.
 
