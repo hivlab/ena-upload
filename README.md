@@ -1,6 +1,6 @@
 # ena-upload
 
-Snakemake workflow to trim and upload Sars-Cov-2 reads to ENA.
+Snakemake workflow to trim and upload Sars-Cov-2 reads to ENA. This workflow uses [ena-upload-cli](https://github.com/usegalaxy-eu/ena-upload-cli) for upload and updated *process_xlsx.py* script for metadata table preparation from [Galaxys ena_upload tool](https://github.com/galaxyproject/tools-iuc/tree/master/tools/ena_upload). Raw reads are adapter-trimmed using [bbduk.sh](https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/bbduk-guide/) tool and mapped to host/human reference genome using [bbmap.sh](https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/bbmap-guide/). 
 
 ## Install
 
