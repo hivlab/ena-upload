@@ -384,18 +384,18 @@ def main(xlsx_path, out_path, action, viral_submission=False):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--form", dest="xlsx_path", required=True)
-    parser.add_argument("--out_dir", dest="out_path", required=True)
-    parser.add_argument("--action", dest="action", required=True)
-    parser.add_argument(
-        "--vir", dest="viral_submission", required=False, action="store_true"
-    )
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--form", dest="xlsx_path", required=True)
+    # parser.add_argument("--out_dir", dest="out_path", required=True)
+    # parser.add_argument("--action", dest="action", required=True)
+    # parser.add_argument(
+    #     "--vir", dest="viral_submission", required=False, action="store_true"
+    # )
+    # args = parser.parse_args()
 
     main(
-        xlsx_path=args.xlsx_path,
-        out_path=args.out_path,
-        action=args.action,
-        viral_submission=args.viral_submission,
+        xlsx_path=snakemake.input[0],
+        out_path=snakemake.params["out_dir"],
+        action=snakemake.params["action"],
+        viral_submission=snakemake.params["viral_submission"],
     )

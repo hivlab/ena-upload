@@ -67,7 +67,7 @@ rule parse_form:
     params:
         action="add",
         viral_submission=True,
-        out_dir="results",
+        out_dir=lambda wildcards, output: os.path.dirname(output.study),
     resources:
         runtime=120,
         mem_mb=4000,

@@ -91,6 +91,11 @@ with ChainedAssignent():
     for k, v in sample_conf.items():
         ena_sample.loc[:, k] = v
 
+isolate = ena_sample.apply(
+    lambda row: f"SARS-CoV-2/human/{row['geographic location (country and/or sea)']}/{row.alias}/{row.collection_date[0:4]}",
+    axis=1,
+)
+ena_sample = ena_sample.assign(isolate=isolate.values)
 ena_sample.rename(columns={"collection_date": "collection date"}, inplace=True)
 samples = pd.concat([pd.DataFrame(sample_head), ena_sample], sort=False)[
     ena_sample_cols
