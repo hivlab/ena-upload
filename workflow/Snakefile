@@ -64,17 +64,15 @@ rule parse_form:
         sample="results/samples.tsv",
         experiment="results/experiments.tsv",
         run="results/runs.tsv",
-    log:
-        "logs/parse_form.log",
     params:
-        extra="--action add --vir",
+        action="add",
+        viral_submission=True,
+        out_dir="results",
     resources:
         runtime=120,
         mem_mb=4000,
-    shell:
-        """
-        (python workflow/scripts/process_xlsx.py --form {input[0]} --out_dir results {params.extra}) 2> {log}
-        """
+    script:
+        "scripts/process_xlsx.py"
 
 
 # Quality trimming.

@@ -85,6 +85,7 @@ ena_sample_comments = [
 sample_head = dict(zip(ena_sample_cols, [[i] for i in ena_sample_comments]))
 sample_conf = conf["ena_sample"]
 ena_sample = sample_metadata[["alias", "collection_date"]]
+ena_sample = ena_sample.drop_duplicates()
 
 with ChainedAssignent():
     for k, v in sample_conf.items():
@@ -132,6 +133,7 @@ ena_experiment_comments = [
 experiment_head = dict(zip(ena_experiment_cols, [[i] for i in ena_experiment_comments]))
 experiment_conf = conf["ena_experiment"]
 ena_experiment = sample_metadata[["alias", "experiment"]]
+ena_experiment = ena_experiment.drop_duplicates()
 ena_experiment.rename(columns={"alias": "sample_alias"}, inplace=True)
 alias = ena_experiment.apply(lambda row: f"{row.experiment}_{row.sample_alias}", axis=1)
 ena_experiment = ena_experiment.assign(alias=alias.values)
