@@ -46,15 +46,13 @@ rule form:
         config="config/config.yaml",
     output:
         xlsx="results/ena_submission.xlsx",
-    log:
-        "logs/form.log",
+    params:
+        lambda wildcards: FILE_NAME_TEMPLATE
     resources:
         runtime=120,
         mem_mb=4000,
-    shell:
-        """
-        (Rscript workflow/scripts/submission-metadata-excel.R -p {input.pep} -c {input.config} -t {FILE_NAME_TEMPLATE} -x {output.xlsx}) 2> {log}
-        """
+    script:
+        "scripts/submission-metadata-excel.py"
 
 
 # Generate metadata files from excel spreadsheets.
