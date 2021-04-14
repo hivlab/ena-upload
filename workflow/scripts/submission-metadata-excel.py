@@ -15,7 +15,7 @@ def mergeDict(dict1, dict2):
     return dict3
 
 
-class ChainedAssignent:
+class ChainedAssignment:
     def __init__(self, chained=None):
         acceptable = [None, "warn", "raise"]
         assert chained in acceptable, "chained must be in " + str(acceptable)
@@ -87,7 +87,7 @@ sample_conf = conf["ena_sample"]
 ena_sample = sample_metadata[["alias", "collection_date"]]
 ena_sample = ena_sample.drop_duplicates()
 
-with ChainedAssignent():
+with ChainedAssignment():
     for k, v in sample_conf.items():
         ena_sample.loc[:, k] = v
 
@@ -143,7 +143,7 @@ ena_experiment.rename(columns={"alias": "sample_alias"}, inplace=True)
 alias = ena_experiment.apply(lambda row: f"{row.experiment}_{row.sample_alias}", axis=1)
 ena_experiment = ena_experiment.assign(alias=alias.values)
 ena_experiment["study_alias"] = conf["ena_study"]["alias"]
-with ChainedAssignent():
+with ChainedAssignment():
     for k, v in experiment_conf.items():
         ena_experiment.loc[:, k] = v
 experiments = pd.concat([pd.DataFrame(experiment_head), ena_experiment], sort=False)[
@@ -172,7 +172,7 @@ experiment_alias = ena_run.apply(
     lambda row: f"{row.experiment}_{row.sample_alias}", axis=1
 )
 ena_run = ena_run.assign(experiment_alias=experiment_alias.values)
-with ChainedAssignent():
+with ChainedAssignment():
     for k, v in run_conf.items():
         ena_run.loc[:, k] = v
 ena_run.rename(columns={"run": "alias"}, inplace=True)
