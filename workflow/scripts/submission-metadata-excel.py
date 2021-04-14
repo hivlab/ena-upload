@@ -59,9 +59,13 @@ ena_sample_cols = [
     "sample_description",
     "collection date",
     "geographic location (country and/or sea)",
+    "geographic location (region and locality)",
+    "geographic location (longitude)",
+    "geographic location (latitude)",
     "host common name",
     "host health state",
     "host sex",
+    "host age",
     "host scientific name",
     "collector name",
     "collecting institution",
@@ -74,22 +78,27 @@ ena_sample_comments = [
     "Free-form text describing the sample, its origin, and its method of isolation.",
     "",
     "The geographical origin of the sample as defined by the country or sea. Country or sea names should be chosen from the INSDC country list (http://insdc.org/country.html).",
+    "The geographical origin of the sample as defined by the region and/or locality.",
+    "The geographical origin of the sample as defined by the longitude.",
+    "The geographical origin of the sample as defined by the latitude.",
     "common name of the host, e.g. human",
     "Health status of the host at the time of sample collection.",
     "Gender or sex of the host.",
+    "Age of the host.",
     "Scientific name of the natural (as opposed to laboratory) host to the organism from which sample was obtained.",
     "Name of the person who collected the specimen. Example: John Smith",
     "Name of the institution to which the person collecting the specimen belongs. Format: Institute Name, Institute Address",
     "individual isolate from which the sample was obtained",
 ]
 sample_head = dict(zip(ena_sample_cols, [[i] for i in ena_sample_comments]))
-sample_conf = conf["ena_sample"]
-ena_sample = sample_metadata[["alias", "collection_date"]]
+ena_sample = sample_metadata[sample_metadata.columns & ena_sample_cols]
 ena_sample = ena_sample.drop_duplicates()
+sample_conf = conf["ena_sample"]
 
 with ChainedAssignment():
     for k, v in sample_conf.items():
-        ena_sample.loc[:, k] = v
+        if k not in ena_sample.columns:
+            ena_sample.loc[:, k] = v
 
 isolate = ena_sample.apply(
     lambda row: f"SARS-CoV-2/human/{row['geographic location (country and/or sea)']}/{row.alias}/{row.collection_date[0:4]}",
@@ -137,7 +146,7 @@ ena_experiment_comments = [
 
 experiment_head = dict(zip(ena_experiment_cols, [[i] for i in ena_experiment_comments]))
 experiment_conf = conf["ena_experiment"]
-ena_experiment = sample_metadata[["alias", "experiment"]]
+ena_experiment = sample_metadata[sample_metadata.columns & ena_experiment_cols]
 ena_experiment = ena_experiment.drop_duplicates()
 ena_experiment.rename(columns={"alias": "sample_alias"}, inplace=True)
 alias = ena_experiment.apply(lambda row: f"{row.experiment}_{row.sample_alias}", axis=1)
@@ -145,7 +154,9 @@ ena_experiment = ena_experiment.assign(alias=alias.values)
 ena_experiment["study_alias"] = conf["ena_study"]["alias"]
 with ChainedAssignment():
     for k, v in experiment_conf.items():
-        ena_experiment.loc[:, k] = v
+        if k not in ena_experiment.columns:
+            ena_experiment.loc[:, k] = v
+
 experiments = pd.concat([pd.DataFrame(experiment_head), ena_experiment], sort=False)[
     ena_experiment_cols
 ]
