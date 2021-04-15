@@ -3,8 +3,10 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - ena-upload-cli
   - openpyxl
   - xlrd
   - snakemake
   - peppy
+  - pip
+  - pip:
+     - "--editable=git+https://github.com/avilab/ena-upload-cli.git@location#egg=ena-upload-cli"

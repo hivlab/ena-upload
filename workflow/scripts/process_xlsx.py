@@ -186,7 +186,7 @@ def main(xlsx_path, out_path, action, viral_submission=False):
                     "sample_description",
                     "collection_date",
                     "geographic_location",
-                    "geographic_location_locality",
+                    "geographic_location_region",
                     "geographic_location_longitude",
                     "geographic_location_latitude",
                     "host_common_name",

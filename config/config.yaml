@@ -22,7 +22,7 @@ ena_experiment:
   title: "Illumina MiSeq sequencing of amplicons"
   design_description: "Tiling amplicon PCR with primers from doi: 10.1093/ve/veaa027"
   library_strategy: "AMPLICON"
-  library_source: "VIRAL RNA"	
+  library_source: "VIRAL RNA"
   library_selection: "RT-PCR"
   library_layout: "PAIRED"
   insert_size: "250"

@@ -92,7 +92,7 @@ rule trim:
         runtime=lambda wildcards, attempt: 180 + (attempt * 60),
         mem_mb=16000,
     wrapper:
-        f"{WRAPPER_PREFIX}/v0.6/bbtools/bbduk"
+        f"{WRAPPER_PREFIX}/v0.7.6/bbtools/bbduk"
 
 
 # Remove host sequences.
@@ -113,7 +113,7 @@ rule maphost:
         mem_mb=40000,
     threads: 4
     wrapper:
-        f"{WRAPPER_PREFIX}/v0.6/bbtools/bbwrap"
+        f"{WRAPPER_PREFIX}/v0.7.6/bbtools/bbwrap"
 
 
 # Convert PE interleaved reads to pair.
@@ -131,7 +131,7 @@ rule reformat:
         runtime=360,
         mem_mb=4000,
     wrapper:
-        f"{WRAPPER_PREFIX}/v0.6/bbtools/reformat"
+        f"{WRAPPER_PREFIX}/v0.7.6/bbtools/reformat"
 
 
 # Upload new study or samples to ENA. When adding new samples to study, omit study table.
@@ -147,7 +147,7 @@ rule upload:
         "logs/upload.log",
     params:
         action="add",
-        data="results/data/*_R*_clean.fastq.gz",
+        data="results/data/Cov7755*_R*_clean.fastq.gz",
         center=config["center"],
         secret=".secret.yml",
         extra="--vir",

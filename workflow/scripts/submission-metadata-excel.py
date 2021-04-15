@@ -91,7 +91,7 @@ ena_sample_comments = [
     "individual isolate from which the sample was obtained",
 ]
 sample_head = dict(zip(ena_sample_cols, [[i] for i in ena_sample_comments]))
-ena_sample = sample_metadata[sample_metadata.columns & ena_sample_cols]
+ena_sample = sample_metadata[sample_metadata.columns.intersection(ena_sample_cols)]
 ena_sample = ena_sample.drop_duplicates()
 sample_conf = conf["ena_sample"]
 
@@ -101,11 +101,10 @@ with ChainedAssignment():
             ena_sample.loc[:, k] = v
 
 isolate = ena_sample.apply(
-    lambda row: f"SARS-CoV-2/human/{row['geographic location (country and/or sea)']}/{row.alias}/{row.collection_date[0:4]}",
+    lambda row: f"SARS-CoV-2/human/{row['geographic location (country and/or sea)']}/{row.alias}/{row['collection date'][0:4]}",
     axis=1,
 )
 ena_sample = ena_sample.assign(isolate=isolate.values)
-ena_sample.rename(columns={"collection_date": "collection date"}, inplace=True)
 samples = pd.concat([pd.DataFrame(sample_head), ena_sample], sort=False)[
     ena_sample_cols
 ]
@@ -146,7 +145,9 @@ ena_experiment_comments = [
 
 experiment_head = dict(zip(ena_experiment_cols, [[i] for i in ena_experiment_comments]))
 experiment_conf = conf["ena_experiment"]
-ena_experiment = sample_metadata[sample_metadata.columns & ena_experiment_cols]
+exp_cols=list(sample_metadata.columns.intersection(ena_experiment_cols))
+exp_cols.append("experiment")
+ena_experiment = sample_metadata[exp_cols]
 ena_experiment = ena_experiment.drop_duplicates()
 ena_experiment.rename(columns={"alias": "sample_alias"}, inplace=True)
 alias = ena_experiment.apply(lambda row: f"{row.experiment}_{row.sample_alias}", axis=1)
