@@ -1,9 +1,9 @@
 pep_version: 2.0.0
-sample_table: metadata.csv
+sample_table: metadata_mandatory.csv
 sample_modifiers:
   append:
     path: source1
   derive:
     attributes: [path]
     sources:
-      source1: "covid/{experiment}/{file}"
+      source1: "/gpfs/hpc/projects/covid/{experiment}/{file}"
