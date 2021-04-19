@@ -41,7 +41,7 @@ rule all:
         expand("results/{experiment}/upload.done", experiment = EXPERIMENTS),
 
 
-localrules: all, submit
+localrules: all, upload
 
 
 # Generate study and sample metadata excel spreadsheet.
