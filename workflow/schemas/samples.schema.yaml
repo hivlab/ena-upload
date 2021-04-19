@@ -1,0 +1,25 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+description: an entry in the sample sheet
+properties:
+  sample_name:
+    type: string
+    description:  sample identifier to group runs to be mapped together
+  run:
+    type: string
+    description: sequencing run name/identifier
+  file:
+    type: string
+    description:  run/data file name
+  experiment:
+    type: string
+    description: experiment/batch name 
+  collection date:
+    type: string
+    description: sample collection date
+
+required:
+  - sample_name
+  - run
+  - file
+  - experiment
+  - collection date

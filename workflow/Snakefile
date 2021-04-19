@@ -9,6 +9,7 @@ configfile: "config/config.yaml"
 
 
 pepfile: "config/pep.yaml"
+validate(pep.sample_table, "schemas/samples.schema.yaml")
 
 
 # Path to snakemake wrappers repository.
@@ -21,7 +22,8 @@ HOST_GENOME = os.environ["REF_GENOME_HUMAN"]
 # Parse run names.
 RUNS = list(set(pep.sample_table["run"]))
 FILES = pep.sample_table["path"].to_list()
-FILE_NAME_TEMPLATE = "results/data/{run}_R{pair}_clean.fastq.gz"
+EXPERIMENTS = list(set(pep.sample_table["experiment"]))
+FILE_NAME_TEMPLATE = "results/{experiment}/data/{run}_R{pair}_clean.fastq.gz"
 
 
 # Function to match read pair to run.
@@ -36,7 +38,10 @@ def get_reads(wildcards):
 # Workflow target.
 rule all:
     input:
-        "results/upload.done",
+        expand("results/{experiment}/upload.done", experiment = EXPERIMENTS),
+
+
+localrules: all, submit
 
 
 # Generate study and sample metadata excel spreadsheet.
@@ -45,7 +50,7 @@ rule form:
         pep="config/pep.yaml",
         config="config/config.yaml",
     output:
-        xlsx="results/ena_submission.xlsx",
+        xlsx=expand("results/{experiment}/ena_submission.xlsx", experiment=EXPERIMENTS),
     params:
         lambda wildcards: FILE_NAME_TEMPLATE
     resources:
@@ -60,10 +65,10 @@ rule parse_form:
     input:
         rules.form.output.xlsx,
     output:
-        study="results/studies.tsv",
-        sample="results/samples.tsv",
-        experiment="results/experiments.tsv",
-        run="results/runs.tsv",
+        study="results/{experiment}/studies.tsv",
+        sample="results/{experiment}/samples.tsv",
+        experiment="results/{experiment}/experiments.tsv",
+        run="results/{experiment}/runs.tsv",
     params:
         action="add",
         viral_submission=True,
@@ -80,10 +85,10 @@ rule trim:
     input:
         unpack(get_reads),
     output:
-        out1=temp("results/data/{run}_R1_trimmed.fastq.gz"),
-        out2=temp("results/data/{run}_R2_trimmed.fastq.gz"),
+        out1=temp("results/{experiment}/data/{run}_R1_trimmed.fastq.gz"),
+        out2=temp("results/{experiment}/data/{run}_R2_trimmed.fastq.gz"),
     log:
-        "logs/{run}_trim.log",
+        "logs/{experiment}/{run}_trim.log",
     params:
         extra=(
             "ref=adapters ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=r trimq=10 ordered"
@@ -102,10 +107,10 @@ rule maphost:
         in2=rules.trim.output.out2,
         ref=HOST_GENOME,
     output:
-        outu=temp("results/data/{run}_interleaved_clean.fastq.gz"),
-        statsfile="results/data/{run}_maphost.txt",
+        outu=temp("results/{experiment}/data/{run}_interleaved_clean.fastq.gz"),
+        statsfile="results/{experiment}/data/{run}_maphost.txt",
     log:
-        "logs/{run}_maphost.log",
+        "logs/{experiment}/{run}_maphost.log",
     params:
         extra="minid=0.95 maxindel=3 bwr=0.16 bw=12 quickmatch fast minhits=2 qtrim=rl trimq=10 untrim",
     resources:
@@ -121,10 +126,10 @@ rule reformat:
     input:
         rules.maphost.output.outu,
     output:
-        out="results/data/{run}_R1_clean.fastq.gz",
-        out2="results/data/{run}_R2_clean.fastq.gz",
+        out="results/{experiment}/data/{run}_R1_clean.fastq.gz",
+        out2="results/{experiment}/data/{run}_R2_clean.fastq.gz",
     log:
-        "logs/{run}_reformat.log",
+        "logs/{experiment}/{run}_reformat.log",
     params:
         extra="",
     resources:
@@ -137,17 +142,17 @@ rule reformat:
 # Upload new study or samples to ENA. When adding new samples to study, omit study table.
 rule upload:
     input:
-        expand(FILE_NAME_TEMPLATE, run=RUNS, pair=[1, 2]),
+        lambda wildcards: expand(FILE_NAME_TEMPLATE, experiment=wildcards.experiment, run=RUNS, pair=[1, 2]),
         sample=rules.parse_form.output.sample,
         experiment=rules.parse_form.output.experiment,
         run=rules.parse_form.output.run,
     output:
-        "results/upload.done",
+        "results/{experiment}/upload.done",
     log:
-        "logs/upload.log",
+        "logs/{experiment}/upload.log",
     params:
         action="add",
-        data="results/data/*_R*_clean.fastq.gz",
+        data=lambda wildcards: FILE_NAME_TEMPLATE.format(experiment=wildcards.experiment, run="*", pair="*"),
         center=config["center"],
         secret=".secret.yml",
         extra="--vir",
