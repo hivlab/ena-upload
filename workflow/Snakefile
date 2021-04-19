@@ -63,7 +63,7 @@ rule form:
 # Generate metadata files from excel spreadsheets.
 rule parse_form:
     input:
-        rules.form.output.xlsx,
+        "results/{experiment}/ena_submission.xlsx",
     output:
         study="results/{experiment}/studies.tsv",
         sample="results/{experiment}/samples.tsv",
