@@ -15,7 +15,7 @@ pepfile: "config/pep.yaml"
 WRAPPER_PREFIX = "https://raw.githubusercontent.com/avilab/virome-wrappers"
 
 # Path to indexed host genome. Set HOST_GENOME environment variable or use path directly.
-HOST_GENOME = os.environ["HOST_GENOME"]
+HOST_GENOME = os.environ["REF_GENOME_HUMAN"]
 
 
 # Parse run names.
@@ -147,13 +147,13 @@ rule upload:
         "logs/upload.log",
     params:
         action="add",
-        data="results/data/Cov7755*_R*_clean.fastq.gz",
+        data="results/data/*_R*_clean.fastq.gz",
         center=config["center"],
         secret=".secret.yml",
         extra="--vir",
     resources:
-        runtime=1440,
-        mem_mb=8000,
+        runtime=2000,
+        mem_mb=4000,
     shell:
         """
         ($CONDA_PREFIX/bin/ena-upload-cli --action {params.action} \
@@ -161,7 +161,7 @@ rule upload:
         --experiment {input.experiment} \
         --run {input.run} \
         --data {params.data} \
-        --center {params.center} \
+        --center '{params.center}' \
         --secret {params.secret} \
         {params.extra} \
         && touch {output[0]}) 2> {log}       
