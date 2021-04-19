@@ -147,7 +147,8 @@ rule upload:
         experiment=rules.parse_form.output.experiment,
         run=rules.parse_form.output.run,
     output:
-        "results/{experiment}/upload.done",
+        done="results/{experiment}/upload.done",
+        receipt="results/{experiment}/receipt.txt",
     log:
         "logs/{experiment}/upload.log",
     params:
@@ -169,5 +170,6 @@ rule upload:
         --center '{params.center}' \
         --secret {params.secret} \
         {params.extra} \
-        && touch {output[0]}) 2> {log}       
+        && mv receipt.txt {output.receipt} \
+        && touch {output.done}) 2> {log}       
         """
