@@ -142,7 +142,7 @@ rule reformat:
 # Upload new study or samples to ENA. When adding new samples to study, omit study table.
 rule upload:
     input:
-        lambda wildcards: expand(FILE_NAME_TEMPLATE, experiment=wildcards.experiment, run=RUNS, pair=[1, 2]),
+        lambda wildcards: expand(FILE_NAME_TEMPLATE, experiment=wildcards.experiment, run=list(set(pep.sample_table.loc[pep.sample_table.experiment==wildcards.experiment, "run"])), pair=[1, 2]),
         sample=rules.parse_form.output.sample,
         experiment=rules.parse_form.output.experiment,
         run=rules.parse_form.output.run,
