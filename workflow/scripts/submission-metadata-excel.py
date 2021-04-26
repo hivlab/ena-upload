@@ -111,10 +111,8 @@ for name, group in grouped:
     )
     ena_sample = ena_sample.assign(isolate=isolate.values)
     sample_head = pd.DataFrame(dict(zip(ena_sample_cols, [[i] for i in ena_sample_comments])))
-    sample_head = sample_head[sample_head.columns.intersection(ena_sample.colums)]
-    samples = pd.concat([sample_head, ena_sample], sort=False)[
-        ena_sample_cols
-    ]
+    sample_head = sample_head[sample_head.columns.intersection(ena_sample.columns)]
+    samples = pd.concat([sample_head, ena_sample], sort=False)
 
     # ENA_experiment
     ena_experiment_cols = [
