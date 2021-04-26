@@ -31,10 +31,8 @@ def read_ena_xlsx_sheet(xlsx_path, sheet_name):
 def extract_data(xl_sheet, expected_columns, unique_key="alias"):
     if any(xl_sheet.columns.value_counts() > 1):
         sys.exit("Duplicated columns")
-    for col in range(len(expected_columns)):
-        assert (
-            expected_columns[col] in xl_sheet.columns
-        ), f"Expected column {expected_columns[col]} not found"
+    for col in expected_columns:
+        assert col in xl_sheet.columns, f"Expected metadata column {col} not found"
     assert not any(
         xl_sheet.duplicated(subset=[unique_key])
     ), f"{unique_key} identificators not unique"
@@ -68,13 +66,9 @@ def main(xlsx_path, out_path, action, viral_submission=False):
             "scientific_name",
             "sample_description",
             "geographic location (country and/or sea)",
-            "geographic location (region and locality)",
-            "geographic location (longitude)",
-            "geographic location (latitude)",
             "host common name",
             "host health state",
             "host sex",
-            "host age",
             "host scientific name",
             "collector name",
             "collection date",
@@ -174,31 +168,44 @@ def main(xlsx_path, out_path, action, viral_submission=False):
     )
     samples_table = open(pathlib.Path(out_path) / "samples.tsv", "w")
     if viral_submission:
+        optional_keys = list(samples_dict.values())[0]
         samples_table.write(
             "\t".join(
                 [
-                    "alias",
-                    "status",
-                    "accession",
-                    "title",
-                    "scientific_name",
-                    "taxon_id",
-                    "sample_description",
-                    "collection_date",
-                    "geographic_location",
-                    "geographic_location_region",
-                    "geographic_location_longitude",
-                    "geographic_location_latitude",
-                    "host_common_name",
-                    "host_subject_id",
-                    "host_health_state",
-                    "host_sex",
-                    "host_age",
-                    "host_scientific_name",
-                    "collector_name",
-                    "collecting_institution",
-                    "isolate",
-                    "submission_date",
+                    i
+                    for i in [
+                        "alias",
+                        "status",
+                        "accession",
+                        "title",
+                        "scientific_name",
+                        "taxon_id",
+                        "sample_description",
+                        "collection_date",
+                        "geographic_location",
+                        "geographic_location_region"
+                        if optional_keys.get(
+                            "geographic location (region and locality)"
+                        )
+                        else None,
+                        "geographic_location_longitude"
+                        if optional_keys.get("geographic location (longitude)")
+                        else None,
+                        "geographic_location_latitude"
+                        if optional_keys.get("geographic location (latitude)")
+                        else None,
+                        "host_common_name",
+                        "host_subject_id",
+                        "host_health_state",
+                        "host_sex",
+                        "host_age" if optional_keys.get("host age") else None,
+                        "host_scientific_name",
+                        "collector_name",
+                        "collecting_institution",
+                        "isolate",
+                        "submission_date",
+                    ]
+                    if i
                 ]
             )
             + "\n"
