@@ -39,7 +39,7 @@ with open(snakemake.input.config) as h:
 file_name_template = snakemake.params[0]
 
 
-grouped = sample_metadata.groupby('experiment')
+grouped = sample_metadata.groupby("experiment")
 
 for name, group in grouped:
 
@@ -95,7 +95,7 @@ for name, group in grouped:
         "Name of the institution to which the person collecting the specimen belongs. Format: Institute Name, Institute Address",
         "individual isolate from which the sample was obtained",
     ]
-    sample_head = dict(zip(ena_sample_cols, [[i] for i in ena_sample_comments]))
+    
     ena_sample = group[group.columns.intersection(ena_sample_cols)]
     ena_sample = ena_sample.drop_duplicates()
     sample_conf = conf["ena_sample"]
@@ -110,7 +110,9 @@ for name, group in grouped:
         axis=1,
     )
     ena_sample = ena_sample.assign(isolate=isolate.values)
-    samples = pd.concat([pd.DataFrame(sample_head), ena_sample], sort=False)[
+    sample_head = pd.DataFrame(dict(zip(ena_sample_cols, [[i] for i in ena_sample_comments])))
+    sample_head = sample_head[sample_head.columns.intersection(ena_sample.colums)]
+    samples = pd.concat([sample_head, ena_sample], sort=False)[
         ena_sample_cols
     ]
 
@@ -148,14 +150,18 @@ for name, group in grouped:
         "Model of the sequencing instrument.",
     ]
 
-    experiment_head = dict(zip(ena_experiment_cols, [[i] for i in ena_experiment_comments]))
+    experiment_head = dict(
+        zip(ena_experiment_cols, [[i] for i in ena_experiment_comments])
+    )
     experiment_conf = conf["ena_experiment"]
-    exp_cols=list(group.columns.intersection(ena_experiment_cols))
+    exp_cols = list(group.columns.intersection(ena_experiment_cols))
     exp_cols.append("experiment")
     ena_experiment = group[exp_cols]
     ena_experiment = ena_experiment.drop_duplicates()
     ena_experiment.rename(columns={"alias": "sample_alias"}, inplace=True)
-    alias = ena_experiment.apply(lambda row: f"{row.experiment}_{row.sample_alias}", axis=1)
+    alias = ena_experiment.apply(
+        lambda row: f"{row.experiment}_{row.sample_alias}", axis=1
+    )
     ena_experiment = ena_experiment.assign(alias=alias.values)
     ena_experiment["study_alias"] = conf["ena_study"]["alias"]
     with ChainedAssignment():
@@ -163,9 +169,9 @@ for name, group in grouped:
             if k not in ena_experiment.columns:
                 ena_experiment.loc[:, k] = v
 
-    experiments = pd.concat([pd.DataFrame(experiment_head), ena_experiment], sort=False)[
-        ena_experiment_cols
-    ]
+    experiments = pd.concat(
+        [pd.DataFrame(experiment_head), ena_experiment], sort=False
+    )[ena_experiment_cols]
 
     # ENA_run
     ena_run_cols = ["alias", "experiment_alias", "file_name", "file_format"]
@@ -180,9 +186,13 @@ for name, group in grouped:
     run_conf = conf["ena_run"]
     ena_run = group[["run", "file", "experiment", "alias"]]
     ena_run.rename(columns={"alias": "sample_alias"}, inplace=True)
-    pair = ena_run.apply(lambda row: re.search("(?<=R)[1,2]", row.file).group(0), axis=1)
+    pair = ena_run.apply(
+        lambda row: re.search("(?<=R)[1,2]", row.file).group(0), axis=1
+    )
     ena_run = ena_run.assign(pair=pair.values)
-    fn = lambda row: os.path.basename(file_name_template.format(experiment=name, run=row.run, pair=row.pair))
+    fn = lambda row: os.path.basename(
+        file_name_template.format(experiment=name, run=row.run, pair=row.pair)
+    )
     file_name = ena_run.apply(fn, axis=1)
     ena_run = ena_run.assign(file_name=file_name.values)
     experiment_alias = ena_run.apply(
@@ -195,7 +205,7 @@ for name, group in grouped:
     ena_run.rename(columns={"run": "alias"}, inplace=True)
     runs = pd.concat([pd.DataFrame(run_head), ena_run], sort=False)[ena_run_cols]
 
-    outfile=[i for i in snakemake.output.xlsx if name in i][0]
+    outfile = [i for i in snakemake.output.xlsx if name in i][0]
     with pd.ExcelWriter(outfile) as writer:
         study.to_excel(writer, sheet_name="ENA_study", index=False)
         samples.to_excel(writer, sheet_name="ENA_sample", index=False)
