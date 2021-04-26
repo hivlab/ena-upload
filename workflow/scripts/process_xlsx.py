@@ -294,28 +294,32 @@ def main(xlsx_path, out_path, action, viral_submission=False):
             samples_table.write(
                 "\t".join(
                     [
-                        sample_alias,
-                        action,
-                        "ena_accession",
-                        sample["title"],
-                        sample["scientific_name"],
-                        "tax_id_updated_by_ENA",
-                        sample["sample_description"],
-                        sample["collection date"],
-                        sample["geographic location (country and/or sea)"],
-                        sample["geographic location (region and locality)"],
-                        sample["geographic location (longitude)"],
-                        sample["geographic location (latitude)"],
-                        sample["host common name"],
-                        "host subject id",
-                        sample["host health state"],
-                        sample["host sex"],
-                        sample["host age"],
-                        sample["host scientific name"],
-                        sample["collector name"],
-                        sample["collecting institution"],
-                        sample["isolate"],
-                        "ENA_submission_date",
+                        i
+                        for i in [
+                            sample_alias,
+                            action,
+                            "ena_accession",
+                            sample["title"],
+                            sample["scientific_name"],
+                            "tax_id_updated_by_ENA",
+                            sample["sample_description"],
+                            sample["collection date"],
+                            sample["geographic location (country and/or sea)"],
+                            sample.get("geographic location (region and locality)"),
+                            sample.get("geographic location (longitude)"),
+                            sample.get("geographic location (latitude)"),
+                            sample["host common name"],
+                            "host subject id",
+                            sample["host health state"],
+                            sample["host sex"],
+                            sample.get("host age"),
+                            sample["host scientific name"],
+                            sample["collector name"],
+                            sample["collecting institution"],
+                            sample["isolate"],
+                            "ENA_submission_date",
+                        ]
+                        if i
                     ]
                 )
                 + "\n"

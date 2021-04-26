@@ -95,7 +95,7 @@ for name, group in grouped:
         "Name of the institution to which the person collecting the specimen belongs. Format: Institute Name, Institute Address",
         "individual isolate from which the sample was obtained",
     ]
-    
+
     ena_sample = group[group.columns.intersection(ena_sample_cols)]
     ena_sample = ena_sample.drop_duplicates()
     sample_conf = conf["ena_sample"]
@@ -110,7 +110,9 @@ for name, group in grouped:
         axis=1,
     )
     ena_sample = ena_sample.assign(isolate=isolate.values)
-    sample_head = pd.DataFrame(dict(zip(ena_sample_cols, [[i] for i in ena_sample_comments])))
+    sample_head = pd.DataFrame(
+        dict(zip(ena_sample_cols, [[i] for i in ena_sample_comments]))
+    )
     sample_head = sample_head[sample_head.columns.intersection(ena_sample.columns)]
     samples = pd.concat([sample_head, ena_sample], sort=False)
 
